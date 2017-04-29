@@ -1,0 +1,158 @@
+#include <iostream>
+#include <cstring>
+#include<memory>
+using namespace std;
+class MyString
+{
+private:
+	char*c;
+	int t = 0;
+	shared_ptr<int> p;
+public:
+	MyString();
+	MyString(const char*);
+	MyString(const MyString&);
+	~MyString() { delete c; }
+	int size()const { return t; }
+	void append(const char*str);
+	void append(const MyString&);
+	void cow();
+	char&operator[](int n);
+	const char&operator[](int n)const { return c[n]; }
+	friend bool  operator==(const MyString&, const MyString&);
+	friend bool  operator<=(const MyString&, const MyString&);
+	friend bool  operator!=(const MyString&, const MyString&);
+	friend bool  operator>=(const MyString&, const MyString&);
+	friend bool  operator>(const MyString&, const MyString&);
+	friend bool  operator<(const MyString&, const MyString&);
+	friend ostream &operator<<(ostream&os, const MyString&it);
+};
+void MyString::cow()
+{
+	if (p.use_count()!=1)
+	{
+		char*new_c = new char[t + 1];
+		char*old_c = c;
+		for (int n = 0; n != t + 1; n++)
+		{
+			new_c[n] = old_c[n];
+		}
+		c = new_c;
+	}
+}
+
+MyString::MyString():p(new int)
+{
+	c = new char[10];
+}
+MyString::MyString(const MyString&other)
+{
+	this->c = other.c;
+	this->t = other.t;
+	this->p = other.p;
+}
+MyString::MyString(const char* str):p(new int)
+{
+	t = strlen(str);
+	c = new char[t + 1];
+	strcpy(c, str);
+	t = strlen(str);
+	c[t] = '\0';
+}
+char & MyString::operator[](int n)
+{
+	cow();
+	return c[n];
+}
+bool  operator==(const MyString&a, const MyString&b)
+{
+	if (strcmp(a.c, b.c) == 0)
+		return true;
+	else
+		return false;
+}
+bool  operator<=(const MyString&a, const MyString&b)
+{
+	if (strcmp(a.c, b.c) <= 0)
+		return true;
+	else
+		return false;
+}
+bool  operator!=(const MyString&a, const MyString&b)
+{
+	if (strcmp(a.c, b.c) == 0)
+		return false;
+	else
+		return true;
+}
+bool  operator>=(const MyString&a, const MyString&b)
+{
+	if (strcmp(a.c, b.c) >= 0)
+		return true;
+	else
+		return false;
+}
+bool  operator<(const MyString&a, const MyString&b)
+{
+	if (strcmp(a.c, b.c) < 0)
+		return true;
+	else
+		return false;
+}
+bool  operator>(const MyString&a, const MyString&b)
+{
+	if (strcmp(a.c, b.c) > 0)
+		return true;
+	else
+		return false;
+}
+=
+void MyString::append(const char*str)
+{
+	cow();
+	int len_str = strlen(str);
+	char*old_ = c;
+	char*new_ = new char[t + len_str + 1];
+	char*pp = &new_[0];
+	for (int n = 0; n != t; n++, pp++)
+		*pp = old_[n];
+	pp = &new_[t];
+	for (int n = 0; n != len_str; n++, pp++)
+		*pp = str[n];
+	c = new_;
+	t = t + len_str;
+	c[t] = '\0';
+	delete old_;
+}
+void MyString::append(const MyString&other)
+{
+	cow();
+	char*new_ = new char[t + other.t + 1];
+	char*old_ = c;
+	char*pp = &new_[0];
+	for (int n = 0; n != t; n++, pp++)
+		*pp = c[n];
+	pp = &new_[t];
+	for (int n = 0; n != other.t; n++, pp++)
+	{
+		*pp = other.c[n];
+	}
+	t = t + other.t;
+	c = new_;
+	c[t] = '\0';
+	delete old_;
+}
+
+
+ostream &operator<<(ostream&os, const MyString&it)
+{
+	for (int n = 0; n != it.t; n++)
+	{
+		if (it.c[n] == '\0')
+			os << "?";
+		else
+			os << it.c[n];
+	}
+	return os;
+}
+
