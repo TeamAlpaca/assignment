@@ -1,5 +1,3 @@
-//带COW，未使用智能指针。
-
 #include <iostream>
 #include <cstring>
 #include<memory>
@@ -7,13 +5,17 @@ using namespace std;
 class MyString
 {
 private:
-	char*c;
-	int t = 0;
+	char*c=NULL ;
+	unsigned int t = 0;
 public:
-	MyString();
+	MyString() {}
 	MyString(const char*);
 	MyString(const MyString&);
-	~MyString() {if(c[t+1]==0) delete[] c; }
+	~MyString() 
+	{
+	if (c != NULL&&c[t + 1] != 0)  c[t + 1]--;
+	if (c != NULL&&c[t + 1] == 0) { delete[] c; }
+	 }
 	int size()const { return t; }
 	void append(const char*str);
 	void append(const MyString&);
@@ -44,11 +46,6 @@ void MyString::cow()
 	}
 }
 
-MyString::MyString()
-{
-	c = new char[10];
-	c = { 0 };
-}
 MyString::MyString(const MyString&other)
 {
 	this->c = other.c;
@@ -71,45 +68,28 @@ char & MyString::operator[](int n)
 }
 bool  operator==(const MyString&a, const MyString&b)
 {
-	if (strcmp(a.c, b.c) == 0)
-		return true;
-	else
-		return false;
+	return (memcmp(a.c, b.c, (a.t <= b.t ? a.t + 1 : b.t + 1)) == 0);
 }
 bool  operator<=(const MyString&a, const MyString&b)
 {
-	if (strcmp(a.c, b.c) <= 0)
-		return true;
-	else
-		return false;
+	return(memcmp(a.c, b.c, (a.t <= b.t ? a.t + 1 : b.t + 1)) <= 0);
 }
 bool  operator!=(const MyString&a, const MyString&b)
 {
-	if (strcmp(a.c, b.c) == 0)
-		return false;
-	else
-		return true;
+	return !(memcmp(a.c, b.c, (a.t <= b.t ? a.t + 1 : b.t + 1)) == 0);
+
 }
 bool  operator>=(const MyString&a, const MyString&b)
 {
-	if (strcmp(a.c, b.c) >= 0)
-		return true;
-	else
-		return false;
+	return(memcmp(a.c, b.c, (a.t <= b.t ? a.t + 1 : b.t + 1)) >= 0);
 }
 bool  operator<(const MyString&a, const MyString&b)
 {
-	if (strcmp(a.c, b.c) < 0)
-		return true;
-	else
-		return false;
+	return (memcmp(a.c, b.c, (a.t <= b.t ? a.t + 1 : b.t + 1)) < 0);
 }
 bool  operator>(const MyString&a, const MyString&b)
 {
-	if (strcmp(a.c, b.c) > 0)
-		return true;
-	else
-		return false;
+	return (memcmp(a.c, b.c, (a.t <= b.t ? a.t + 1 : b.t + 1)) > 0);
 }
 
 void MyString::append(const char*str)
@@ -117,7 +97,7 @@ void MyString::append(const char*str)
 	cow();
 	int len_str = strlen(str);
 	char*old_ = c;
-	char*new_ = new char[t + len_str + 1];
+	char*new_ = new char[t + len_str + 2];
 	char*pp = &new_[0];
 	for (int n = 0; n != t; n++, pp++)
 		*pp = old_[n];
@@ -127,12 +107,13 @@ void MyString::append(const char*str)
 	c = new_;
 	t = t + len_str;
 	c[t] = '\0';
+	c[t + 1] = 0;
 	delete[] old_;
 }
 void MyString::append(const MyString&other)
 {
 	cow();
-	char*new_ = new char[t + other.t + 1];
+	char*new_ = new char[t + other.t + 2];
 	char*old_ = c;
 	char*pp = &new_[0];
 	for (int n = 0; n != t; n++, pp++)
@@ -145,6 +126,7 @@ void MyString::append(const MyString&other)
 	t = t + other.t;
 	c = new_;
 	c[t] = '\0';
+	c[t + 1] = 0;
 	delete[] old_;
 }
 
@@ -160,4 +142,3 @@ ostream &operator<<(ostream&os, const MyString&it)
 	}
 	return os;
 }
-
