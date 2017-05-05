@@ -1,0 +1,182 @@
+// 两个FAIL
+#include <iostream>
+#include <cstring>
+#include<memory>
+using namespace std;
+class MyString
+{
+private:
+	shared_ptr<char> c=nullptr ;
+	unsigned int t = 0;
+public:
+	MyString() {}
+	MyString(const char*);
+	MyString(const MyString&);
+	~MyString() {}
+	int size()const { return t; }
+	void append(const char*str);
+	void append(const MyString&);
+	void cow();
+	char&operator[](int n);
+	const char&operator[](int n)const;
+	friend bool  operator==(const MyString&, const MyString&);
+	friend bool  operator<=(const MyString&, const MyString&);
+	friend bool  operator!=(const MyString&, const MyString&);
+	friend bool  operator>=(const MyString&, const MyString&);
+	friend bool  operator>(const MyString&, const MyString&);
+	friend bool  operator<(const MyString&, const MyString&);
+	friend ostream &operator<<(ostream&os, const MyString&it);
+};
+shared_ptr<char> make_shared_array(size_t size)
+{
+	return shared_ptr<char>(new char[size + 1], [](char*p) {delete[] p; });
+}
+const char&MyString::operator[](int n)const
+{
+	return *(c.get()+ n);
+}
+void MyString::cow()
+{
+	if (!c.unique())
+	{
+		shared_ptr<char> new_c = make_shared_array(t);
+		shared_ptr<char> old_c = c;
+		for (int n = 0; n != t+1 ; n++)
+		{
+			*(new_c.get() + n) = *(old_c.get() + n);
+		}
+		c = new_c;
+	}
+}
+
+MyString::MyString(const MyString&other)
+{
+	this->c = other.c;
+	this->t = other.t;
+}
+MyString::MyString(const char* str)
+{
+	t = strlen(str);
+	c = make_shared_array(t);
+	for (int i = 0; i != t; i++)
+		*(c.get() + i) = str[i];
+	*(c.get()+t) = '\0';
+}
+char & MyString::operator[](int n)
+{
+	cow();
+	return *(c.get() + n);
+}
+bool  operator==(const MyString&a, const MyString&b)
+{
+	unsigned int j = (a.t <= b.t ? a.t : b.t)+1;
+	for (unsigned int i = 0; i != j; i++)
+	{
+		if (*(a.c.get() + i) != *(b.c.get() + i))
+			return false;
+	}
+	return true;
+}
+bool  operator<=(const MyString&a, const MyString&b)
+{
+	unsigned int j = (a.t <= b.t ? a.t : b.t) + 1;
+	for (unsigned int i = 0; i != j; i++)
+	{
+		if (*(a.c.get() + i) < *(b.c.get() + i))
+			return true;
+		if (*(a.c.get() + i) > *(b.c.get() + i))
+			return false;
+	}
+	return true;
+}
+bool  operator!=(const MyString&a, const MyString&b)
+{
+	unsigned int j = (a.t <= b.t ? a.t : b.t) + 1;
+	for (unsigned int i = 0; i != j; i++)
+	{
+		if (*(a.c.get() + i) != *(b.c.get() + i))
+			return true;
+	}
+	return false;
+
+}
+bool  operator>=(const MyString&a, const MyString&b)
+{
+	unsigned int j = (a.t <= b.t ? a.t : b.t) + 1;
+	for (unsigned int i = 0; i != j; i++)
+	{
+		if (*(a.c.get() + i) > *(b.c.get() + i))
+			return true;
+		if (*(a.c.get() + i) < *(b.c.get() + i))
+			return false;
+	}
+	return true;
+}
+bool  operator<(const MyString&a, const MyString&b)
+{
+	unsigned int j = (a.t <= b.t ? a.t : b.t) + 1;
+	for (unsigned int i = 0; i != j; i++)
+	{
+		if (*(a.c.get() + i) < *(b.c.get() + i))
+			return true;
+		if (*(a.c.get() + i) > *(b.c.get() + i))
+			return false;
+	}
+	return false;
+}
+bool  operator>(const MyString&a, const MyString&b)
+{
+	unsigned int j = (a.t <= b.t ? a.t : b.t) + 1;
+	for (unsigned int i = 0; i != j; i++)
+	{
+		if (*(a.c.get() + i) > *(b.c.get() + i))
+			return true;
+		if (*(a.c.get() + i) < *(b.c.get() + i))
+			return false;
+	}
+	return false;
+}
+
+void MyString::append(const char*str)
+{
+	cow();
+	int len_str = strlen(str);
+	shared_ptr<char> new_ = make_shared_array(t+len_str);
+	int n;
+	for (n = 0; n != t; n++)
+		*(new_.get() + n) = *(c.get() + n);
+	for (n=t; n != t+len_str; n++)
+		*(new_.get() + n) = str[n-t];
+	c = new_;
+	t = t + len_str;
+	*(c.get()+t) = '\0';
+}
+void MyString::append(const MyString&other)
+{
+	cow();
+	shared_ptr<char> new_ = make_shared_array(t + other.t);
+	char* pp = (new_.get());
+	int n;
+	for (n = 0; n != t; n++, pp++)
+		*pp = *(c.get() + n);
+	for (n = t; n != other.t+t; n++, pp++)
+	{
+		*pp = *(other.c.get() + n);
+	}
+	t = t + other.t;
+	c = new_;
+	*(c.get() + t) = '\0';
+}
+
+
+ostream &operator<<(ostream&os, const MyString&it)
+{
+	for (int n = 0; n != it.t; n++)
+	{
+		if (*(it.c.get()+n)== '\0')
+			os << "?";
+		else
+			os << *(it.c.get() + n);
+	}
+	return os;
+}
